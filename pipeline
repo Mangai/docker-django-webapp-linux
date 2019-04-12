@@ -1,0 +1,36 @@
+stage('build & deploy') {
+  openshiftBuild bldCfg: 'docker-django-webapp-linux',
+    namespace: 'development-devops',
+    showBuildLogs: 'true'
+  openshiftVerifyDeployment depCfg: 'docker-django-webapp-linux',
+    namespace: 'development-devops'
+}
+stage('approval (test)') {
+  input message: 'Approve for testing?',
+    id: 'approval'
+}
+stage('deploy to test') {
+  openshiftTag srcStream: 'docker-django-webapp-linux',
+    namespace: 'development-devops',
+    srcTag: 'latest',
+    destinationNamespace: 'testing-devops',
+    destStream: 'docker-django-webapp-linux',
+    destTag: 'test'
+  openshiftVerifyDeployment depCfg: 'docker-django-webapp-linux',
+    namespace: 'testing-devops'
+}
+stage('approval (production)') {
+  input message: 'Approve for production?',
+    id: 'approval'
+}
+
+stage('deploy to production') {
+  openshiftTag srcStream: 'docker-django-webapp-linux',
+    namespace: 'development-devops',
+    srcTag: 'latest',
+    destinationNamespace: 'production-devops',
+    destStream: 'docker-django-webapp-linux',
+    destTag: 'prod'
+  openshiftVerifyDeployment depCfg: 'docker-django-webapp-linux',
+    namespace: 'production-devops'
+}
